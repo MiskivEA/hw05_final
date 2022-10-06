@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
 from ..models import Group, Post
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -23,6 +24,7 @@ class PostURLTest(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.post_id = str(PostURLTest.post.pk)
         self.username = PostURLTest.user.username
         self.slug = str(PostURLTest.group.slug)
@@ -114,3 +116,4 @@ class PostURLTest(TestCase):
             response,
             f'/posts/{self.post_id}/'
         )
+
