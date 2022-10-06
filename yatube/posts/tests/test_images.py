@@ -1,14 +1,14 @@
 import shutil
 import tempfile
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.conf import settings
-from django.core.cache import cache
 
-from ..models import Post, Group
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -59,13 +59,22 @@ class ImagesViewTest(TestCase):
     def test_images_context_index_profile_group(self):
         check_urls = [
             reverse('posts:index'),
-            reverse('posts:profile', kwargs={'username': ImagesViewTest.user.username}),
-            reverse('posts:group_list', kwargs={'slug': ImagesViewTest.post.group.slug}),
+            reverse('posts:profile',
+                    kwargs={'username': ImagesViewTest.user.username}),
+            reverse('posts:group_list',
+                    kwargs={'slug': ImagesViewTest.post.group.slug}),
         ]
         for url in check_urls:
             response = self.authorized_client.get(url)
-            self.assertEqual(response.context['page_obj'][0].image, Post.objects.first().image)
+            self.assertEqual(response.context['page_obj'][0].image,
+                             Post.objects.first().image)
 
     def test_posts_image(self):
-        response = self.authorized_client.get(reverse('posts:posts', kwargs={'post_id': ImagesViewTest.post.pk}))
-        self.assertEqual(response.context['post'].image, Post.objects.first().image)
+        response = self.authorized_client.get(
+            reverse(
+                'posts:posts',
+                kwargs={'post_id': ImagesViewTest.post.pk}
+            )
+        )
+        self.assertEqual(response.context['post'].image,
+                         Post.objects.first().image)

@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import Client, TestCase
 
 from ..models import Group, Post
-from django.core.cache import cache
 
 User = get_user_model()
 
@@ -116,4 +116,3 @@ class PostURLTest(TestCase):
             response,
             f'/posts/{self.post_id}/'
         )
-

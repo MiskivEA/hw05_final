@@ -1,13 +1,9 @@
-import time
-
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from django.core.cache import cache
-
-
-from ..models import Post, Group
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -61,11 +57,3 @@ class CacheTest(TestCase):
         cache.clear()
         response = self.authorized_client.get(reverse('posts:index'))
         self.assertNotIn(CacheTest.post.text, str(response.content))
-
-
-
-
-
-
-
-

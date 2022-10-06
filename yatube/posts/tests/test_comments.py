@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
-from ..models import Post, Group, Comment
+from django.test import Client, TestCase
 from django.urls import reverse
 
+from ..models import Comment, Group, Post
 
 User = get_user_model()
 
@@ -45,9 +45,18 @@ class CommentViewTest(TestCase):
         """
         post_id = CommentViewTest.post.pk
         form_data = {'text': 'new comment 2'}
-        response = self.guest_client.post(reverse('posts:add_comment', kwargs={'post_id': post_id}), data=form_data)
+        response = self.guest_client.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': post_id}
+            ),
+            data=form_data
+        )
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f'/auth/login/?next=/posts/{post_id}/comment/')
+        self.assertRedirects(
+            response,
+            f'/auth/login/?next=/posts/{post_id}/comment/'
+        )
 
     def test_created_comment_shows_on_page(self):
         """ Тестирование работы комментариев
@@ -56,10 +65,23 @@ class CommentViewTest(TestCase):
         """
         post_id = CommentViewTest.post.pk
         form_data = {'text': 'new comment 3'}
-        self.authorized_client.post(reverse('posts:add_comment', kwargs={'post_id': post_id}), data=form_data)
-        response = self.authorized_client.post(reverse('posts:posts', kwargs={'post_id': post_id}))
+        self.authorized_client.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': post_id}
+            ),
+            data=form_data
+        )
+        response = self.authorized_client.post(
+            reverse(
+                'posts:posts',
+                kwargs={'post_id': post_id}
+            )
+        )
 
-        self.assertTrue(Comment.objects.filter(text=form_data['text']).exists())
-        self.assertEqual(response.context['comments'].first(), Comment.objects.first())
-
-
+        self.assertTrue(
+            Comment.objects.filter(text=form_data['text']).exists())
+        self.assertEqual(
+            response.context['comments'].first(),
+            Comment.objects.first()
+        )
