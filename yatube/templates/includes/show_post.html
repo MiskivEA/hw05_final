@@ -1,0 +1,33 @@
+{% with request.resolver_match.view_name as view_name %}
+	{% load thumbnail %}
+<div class="card">
+	<div class="card-header">
+		Дата публикации: {{ item.pub_date|date:"d E Y" }}
+	</div>
+	<div class="card-body">
+		<h6 class="card-title">Автор:
+			<a href="{% url 'posts:profile' item.author.username %}">
+				{{ item.author.get_full_name }}
+			</a>
+			{% if item.group %}
+       <br> Группа: <a href="{% url 'posts:group_list' item.group.slug %}" > {{ item.group }} </a>
+      {% endif %}
+		</h6>
+		{% thumbnail item.image "960x339" crop="center" upscale=True as im %}
+      <img class="card-img my-2" src="{{ im.url }}">
+    {% endthumbnail %}
+		<p class="card-text">{{ item.text }}</p>
+		<div class="card-footer">
+			<a href="{% url 'posts:posts' item.pk %}" >Подробная информация</a>
+			{% if view_name != 'posts:group_list' %}
+				{% if item.group %}
+          <br><a href="{% url 'posts:group_list' item.group.slug %}" > Открыть все записи группы </a>
+        {% endif %}
+			{% endif %}
+		</div>
+	</div>
+</div>
+{% if not forloop.last %}
+  <hr>
+{% endif %}
+{% endwith %}
