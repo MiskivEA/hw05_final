@@ -28,7 +28,7 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group)
+    posts = group.posts.all()
     page_obj = get_page_objects(request, posts, DISPLAY_POST)
     context = {
         'page_obj': page_obj,
@@ -42,12 +42,15 @@ def profile(request, username):
     all_user_posts = author.posts.all()
     page_obj = get_page_objects(request, all_user_posts, DISPLAY_POST)
     following = False
-    if request.user.is_authenticated:
-        if Follow.objects.filter(
-            user=request.user,
-            author=author
-        ).exists():
-            following = True
+    """if request.user.is_authenticated and Follow.objects.filter(user=request.user, author=author).exists():
+        following = True"""
+
+    if (request.user.is_authenticated and
+        Follow.objects.filter(
+                user=request.user,
+                author=author
+            ).exists()):
+        following = True
     context = {
         'page_obj': page_obj,
         'author': author,

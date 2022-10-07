@@ -27,6 +27,7 @@ class PostURLTest(TestCase):
         cache.clear()
         self.post_id = str(PostURLTest.post.pk)
         self.username = PostURLTest.user.username
+        self.username_not_author = PostURLTest.user_not_author.username
         self.slug = str(PostURLTest.group.slug)
 
         self.guest_client = Client()
@@ -116,3 +117,21 @@ class PostURLTest(TestCase):
             response,
             f'/posts/{self.post_id}/'
         )
+
+    def test_not_authorized_can_not_use_subscribes(self):
+        """ Неавторизованный пользователь не может подписаться
+            или отписаться и при попытке будет перенаправлен
+            на страницу авторизации
+            Авторизованнй будет перенаправлен на профиль(останется на месте)
+        """
+        response = self.guest_client.get(f'/profile/{self.username_not_author}/follow/')
+        self.assertRedirects(
+            response,
+            f'/auth/login/?next=/profile/{self.username_not_author}/follow/'
+        )
+        response = self.authorized_client.get(f'/profile/{self.username_not_author}/follow/')
+        self.assertRedirects(
+            response,
+            f'/profile/{self.username_not_author}/'
+        )
+

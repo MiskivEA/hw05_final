@@ -72,6 +72,8 @@ class PostFormTest(TestCase):
         )
         posts_count_2 = Post.objects.count()
         self.assertEqual(posts_count_1 + 1, posts_count_2)
+
+        check_post = Post.objects.first()
         self.assertRedirects(
             response,
             reverse('posts:profile',
@@ -79,25 +81,19 @@ class PostFormTest(TestCase):
         )
         self.assertEqual(
             response.context['page_obj'][0].text,
-            Post.objects.first().text
+            check_post.text
         )
         self.assertEqual(
             response.context['page_obj'][0].author.username,
-            Post.objects.first().author.username
+            check_post.author.username
         )
         self.assertEqual(
             response.context['page_obj'][0].group.pk,
-            Post.objects.first().group.pk
+            check_post.group.pk
         )
         self.assertEqual(
             response.context['page_obj'][0].image,
-            Post.objects.first().image
-        )
-        self.assertTrue(
-            Post.objects.filter(
-                text='Тестовый текст из формы',
-                image='posts/test-image.jpeg'
-            ).exists()
+            check_post.image
         )
 
     def test_form_edit(self):

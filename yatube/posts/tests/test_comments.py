@@ -58,11 +58,8 @@ class CommentViewTest(TestCase):
             f'/auth/login/?next=/posts/{post_id}/comment/'
         )
 
-    def test_created_comment_shows_on_page(self):
-        """ Тестирование работы комментариев
-        1.  Проверка добавления коментария в БД
-        2.  Проверка отображения комментария на странице нужного поста
-        """
+    def test_created_comment_exists(self):
+        """ Проверка добавления коментария в БД """
         post_id = CommentViewTest.post.pk
         form_data = {'text': 'new comment 3'}
         self.authorized_client.post(
@@ -72,15 +69,26 @@ class CommentViewTest(TestCase):
             ),
             data=form_data
         )
-        response = self.authorized_client.post(
+        self.assertTrue(
+            Comment.objects.filter(text=form_data['text']).exists())
+
+    def test_created_comment_shows_on_page(self):
+        """ Проверка отображения комментария на странице нужного поста """
+        post_id = CommentViewTest.post.pk
+        form_data = {'text': 'new comment 3'}
+        self.authorized_client.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': post_id}
+            ),
+            data=form_data
+        )
+        response = self.authorized_client.get(
             reverse(
                 'posts:posts',
                 kwargs={'post_id': post_id}
             )
         )
-
-        self.assertTrue(
-            Comment.objects.filter(text=form_data['text']).exists())
         self.assertEqual(
             response.context['comments'].first(),
             Comment.objects.first()
