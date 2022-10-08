@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
+from django.urls import reverse
 
 from ..models import Group, Post
 
@@ -40,7 +41,7 @@ class PostURLTest(TestCase):
             PostURLTest.user_not_author)
 
     def test_urls_uses_correct_template(self):
-        """Проверка соответствия шаблонов URL-адресам"""
+        """ Проверка соответствия шаблонов URL-адресам """
 
         url_template_names = {
             '/': 'posts/index.html',
@@ -61,8 +62,9 @@ class PostURLTest(TestCase):
                 )
 
     def test_exists_urls_for_everyone(self):
-        """Проверка доступности страниц для
-        неавторизованого пользователя"""
+        """ Проверка доступности страниц для
+            неавторизованого пользователя
+        """
 
         check_urls = {
             '/': 200,
@@ -80,8 +82,9 @@ class PostURLTest(TestCase):
                 )
 
     def test_exists_edit(self):
-        """Проверка доступности редактирования поста для
-        авторизованого пользователя"""
+        """ Проверка доступности редактирования поста для
+            авторизованого пользователя
+        """
 
         response = self.authorized_client.get(
             f'/posts/{self.post_id}/edit/')
@@ -92,8 +95,9 @@ class PostURLTest(TestCase):
         )
 
     def test_create_edit_not_authorized_user_redirects(self):
-        """Проверка редиректов неавторизованого пользователя
-        при попытке создания и редактирования постов"""
+        """ Проверка редиректов неавторизованого пользователя
+            при попытке создания и редактирования постов
+        """
 
         response = self.guest_client.get('/create/')
         self.assertRedirects(
@@ -107,9 +111,10 @@ class PostURLTest(TestCase):
         )
 
     def test_edit_not_author_redirects(self):
-        """Не автор поста, при попытке редактирования
-        будет редиректиться на просмотр, во всяком случае,
-        пока я не узнаю куда надо =) Это мы и проверим"""
+        """ Не автор поста, при попытке редактирования
+            будет редиректиться на просмотр, во всяком случае,
+            пока я не узнаю куда надо =) Это мы и проверим
+        """
 
         response = self.authorized_client_not_author.get(
             f'/posts/{self.post_id}/edit/')

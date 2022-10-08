@@ -12,7 +12,8 @@ class PostViewTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='U1')
+        cls.any_user = User.objects.create_user(username='U2')
         for i in range(10):
             cls.group = Group.objects.create(
                 title='Тестовая группа: ' + str(i),
@@ -29,6 +30,7 @@ class PostViewTest(TestCase):
 
     def setUp(self):
         cache.clear()
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(PostViewTest.user)
 
@@ -138,3 +140,86 @@ class PostViewTest(TestCase):
             response.context['page_obj'][0].group.pk,
             post_for_check.group.pk
         )
+
+    def test_follow_unfollow(self):
+        """ Tестирование подписок, отписок на авторов,
+            а также вывод постов авторов, на которых
+            пользователь подписан.
+        """
+
+        """ Авторизованный редиректится на профиль кумира"""
+        response = self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username_follow': PostViewTest.any_user.username}
+        ))
+        self.assertRedirects(
+            response,
+            f'/profile/{PostViewTest.any_user.username}/',
+        )
+
+        """ Неавторизованный редиректится на авторизацию """
+        response = self.guest_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username_follow': PostViewTest.any_user.username},
+
+        ))
+        self.assertRedirects(
+            response,
+            f'/auth/login/?next=/profile/{PostViewTest.any_user.username}/follow/',
+        )
+        response = self.guest_client.get(reverse(
+            'posts:profile_unfollow',
+            kwargs={'username': PostViewTest.any_user.username}
+        ))
+        self.assertRedirects(
+            response,
+            f'/auth/login/?next=/profile/{PostViewTest.any_user.username}/unfollow/',
+        )
+
+    def test_created_show_post(self):
+        """ При подписке на автора у него появляется новый подписчик
+            При отписке от автора, у него пропадает один подписчик
+        """
+        count_followers_1 = PostViewTest.any_user.following.count()
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username_follow': PostViewTest.any_user.username}
+            )
+        )
+        count_followers_2 = PostViewTest.any_user.following.count()
+        self.assertEqual(count_followers_2, count_followers_1 + 1)
+
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': PostViewTest.any_user.username}
+            )
+        )
+        count_followers_3 = PostViewTest.any_user.following.count()
+        self.assertEqual(count_followers_3, count_followers_2 - 1)
+
+    def test_new_post_shows_only_for_subscribers(self):
+        """ Создаю новый пост под другим пользователем, запрашиваю ленту
+            постов пользователей, на которых подписан(так как я пока ни на
+            кого не подписан - лента будет пуста, и количество объектов
+            переданных на страницу будет равно 0).
+            Далее подписываюсь на второго пользователя, и проверяю что в ленте
+            появился один пост и это именно тот пост, который создал мой кумир
+        """
+        new_post = Post.objects.create(
+            text='new post',
+            author=PostViewTest.any_user
+        )
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response.context['page_obj']), 0)
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username_follow': PostViewTest.any_user.username}
+            )
+        )
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response.context['page_obj']), 1)
+        self.assertEqual(response.context['page_obj'][0].text, new_post.text)
+        self.assertEqual(response.context['page_obj'][0].author.username, new_post.author.username)

@@ -41,16 +41,11 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     all_user_posts = author.posts.all()
     page_obj = get_page_objects(request, all_user_posts, DISPLAY_POST)
-    following = False
-    """if request.user.is_authenticated and Follow.objects.filter(user=request.user, author=author).exists():
-        following = True"""
+    following = (request.user.is_authenticated and Follow.objects.filter(
+        user=request.user,
+        author=author
+    ).exists())
 
-    if (request.user.is_authenticated and
-        Follow.objects.filter(
-                user=request.user,
-                author=author
-            ).exists()):
-        following = True
     context = {
         'page_obj': page_obj,
         'author': author,
@@ -122,10 +117,9 @@ def add_comment(request, post_id):
 @login_required
 def profile_index(request):
     user = request.user
-    subscribes = user.follower.all()
-    all_posts_subs = []
-    for item in subscribes:
-        all_posts_subs += item.author.posts.all()
+    subscribes_obj = user.follower.all()
+    author_list = [item.author for item in subscribes_obj]
+    all_posts_subs = Post.objects.filter(author__in=author_list)
     page_obj = get_page_objects(request, all_posts_subs, DISPLAY_POST)
     context = {
         'page_obj': page_obj
