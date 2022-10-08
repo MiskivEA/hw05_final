@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
-from django.urls import reverse
 
 from ..models import Group, Post
 
@@ -129,14 +128,15 @@ class PostURLTest(TestCase):
             на страницу авторизации
             Авторизованнй будет перенаправлен на профиль(останется на месте)
         """
-        response = self.guest_client.get(f'/profile/{self.username_not_author}/follow/')
+        response = self.guest_client.get(
+            f'/profile/{self.username_not_author}/follow/')
         self.assertRedirects(
             response,
             f'/auth/login/?next=/profile/{self.username_not_author}/follow/'
         )
-        response = self.authorized_client.get(f'/profile/{self.username_not_author}/follow/')
+        response = self.authorized_client.get(
+            f'/profile/{self.username_not_author}/follow/')
         self.assertRedirects(
             response,
             f'/profile/{self.username_not_author}/'
         )
-

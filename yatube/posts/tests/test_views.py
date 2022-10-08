@@ -148,43 +148,45 @@ class PostViewTest(TestCase):
         """
 
         """ Авторизованный редиректится на профиль кумира"""
+        username = PostViewTest.any_user.username
         response = self.authorized_client.get(reverse(
             'posts:profile_follow',
-            kwargs={'username_follow': PostViewTest.any_user.username}
+            kwargs={'username_follow': username}
         ))
         self.assertRedirects(
             response,
-            f'/profile/{PostViewTest.any_user.username}/',
+            f'/profile/{username}/',
         )
 
         """ Неавторизованный редиректится на авторизацию """
         response = self.guest_client.get(reverse(
             'posts:profile_follow',
-            kwargs={'username_follow': PostViewTest.any_user.username},
+            kwargs={'username_follow': username},
 
         ))
         self.assertRedirects(
             response,
-            f'/auth/login/?next=/profile/{PostViewTest.any_user.username}/follow/',
+            f'/auth/login/?next=/profile/{username}/follow/',
         )
         response = self.guest_client.get(reverse(
             'posts:profile_unfollow',
-            kwargs={'username': PostViewTest.any_user.username}
+            kwargs={'username': username}
         ))
         self.assertRedirects(
             response,
-            f'/auth/login/?next=/profile/{PostViewTest.any_user.username}/unfollow/',
+            f'/auth/login/?next=/profile/{username}/unfollow/',
         )
 
     def test_created_show_post(self):
         """ При подписке на автора у него появляется новый подписчик
             При отписке от автора, у него пропадает один подписчик
         """
+        username = PostViewTest.any_user.username
         count_followers_1 = PostViewTest.any_user.following.count()
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
-                kwargs={'username_follow': PostViewTest.any_user.username}
+                kwargs={'username_follow': username}
             )
         )
         count_followers_2 = PostViewTest.any_user.following.count()
@@ -193,7 +195,7 @@ class PostViewTest(TestCase):
         self.authorized_client.get(
             reverse(
                 'posts:profile_unfollow',
-                kwargs={'username': PostViewTest.any_user.username}
+                kwargs={'username': username}
             )
         )
         count_followers_3 = PostViewTest.any_user.following.count()
@@ -207,6 +209,7 @@ class PostViewTest(TestCase):
             Далее подписываюсь на второго пользователя, и проверяю что в ленте
             появился один пост и это именно тот пост, который создал мой кумир
         """
+        username = PostViewTest.any_user.username
         new_post = Post.objects.create(
             text='new post',
             author=PostViewTest.any_user
@@ -216,10 +219,13 @@ class PostViewTest(TestCase):
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
-                kwargs={'username_follow': PostViewTest.any_user.username}
+                kwargs={'username_follow': username}
             )
         )
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 1)
         self.assertEqual(response.context['page_obj'][0].text, new_post.text)
-        self.assertEqual(response.context['page_obj'][0].author.username, new_post.author.username)
+        self.assertEqual(
+            response.context['page_obj'][0].author.username,
+            new_post.author.username
+        )
