@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Group, Post
+from ..models import Group, Post, Follow
 
 User = get_user_model()
 
@@ -142,64 +142,49 @@ class PostViewTest(TestCase):
         )
 
     def test_follow_unfollow(self):
-        """ Tестирование подписок, отписок на авторов,
-            а также вывод постов авторов, на которых
-            пользователь подписан.
-        """
-
-        """ Авторизованный редиректится на профиль кумира"""
-        username = PostViewTest.any_user.username
-        response = self.authorized_client.get(reverse(
+        """Тестирование записи в БД при подписке """
+        user = PostViewTest.user
+        any_user = PostViewTest.any_user
+        """user подписывается any_user"""
+        self.authorized_client.get(reverse(
             'posts:profile_follow',
-            kwargs={'username_follow': username}
+            kwargs={'username_follow': any_user.username}
         ))
-        self.assertRedirects(
-            response,
-            f'/profile/{username}/',
-        )
+        """ Создается соответствующая запись при подписке """
+        follow = Follow.objects.first()
+        self.assertEqual(follow.user, user)
+        self.assertEqual(follow.author, any_user)
 
-        """ Неавторизованный редиректится на авторизацию """
-        response = self.guest_client.get(reverse(
-            'posts:profile_follow',
-            kwargs={'username_follow': username},
-
-        ))
-        self.assertRedirects(
-            response,
-            f'/auth/login/?next=/profile/{username}/follow/',
-        )
-        response = self.guest_client.get(reverse(
-            'posts:profile_unfollow',
-            kwargs={'username': username}
-        ))
-        self.assertRedirects(
-            response,
-            f'/auth/login/?next=/profile/{username}/unfollow/',
-        )
-
-    def test_created_show_post(self):
-        """ При подписке на автора у него появляется новый подписчик
-            При отписке от автора, у него пропадает один подписчик
-        """
-        username = PostViewTest.any_user.username
-        count_followers_1 = PostViewTest.any_user.following.count()
+    def test_follow_subs(self):
+        """ При подписке на автора у него появляется новый подписчик """
+        any_user = PostViewTest.any_user
+        count_followers_1 = any_user.following.count()
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
-                kwargs={'username_follow': username}
+                kwargs={'username_follow': any_user.username}
             )
         )
         count_followers_2 = PostViewTest.any_user.following.count()
         self.assertEqual(count_followers_2, count_followers_1 + 1)
 
+    def test_unfollow_subs(self):
+        """ При отписке от автора, у него пропадает один подписчик """
+        user = PostViewTest.user
+        any_user = PostViewTest.any_user
+        count_followers_1 = any_user.following.count()
+        Follow.objects.create(
+            user=user,
+            author=any_user
+        )
         self.authorized_client.get(
             reverse(
                 'posts:profile_unfollow',
-                kwargs={'username': username}
+                kwargs={'username': any_user.username}
             )
         )
-        count_followers_3 = PostViewTest.any_user.following.count()
-        self.assertEqual(count_followers_3, count_followers_2 - 1)
+        count_followers_2 = PostViewTest.any_user.following.count()
+        self.assertEqual(count_followers_2, count_followers_1)
 
     def test_new_post_shows_only_for_subscribers(self):
         """ Создаю новый пост под другим пользователем, запрашиваю ленту

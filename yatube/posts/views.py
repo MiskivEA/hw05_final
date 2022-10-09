@@ -116,10 +116,7 @@ def add_comment(request, post_id):
 
 @login_required
 def profile_index(request):
-    user = request.user
-    subscribes_obj = user.follower.all()
-    author_list = [item.author for item in subscribes_obj]
-    all_posts_subs = Post.objects.filter(author__in=author_list)
+    all_posts_subs = Post.objects.filter(author__following__user=request.user)
     page_obj = get_page_objects(request, all_posts_subs, DISPLAY_POST)
     context = {
         'page_obj': page_obj

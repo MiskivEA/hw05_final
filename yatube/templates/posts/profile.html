@@ -11,26 +11,25 @@
 	  <h4> Всего подсписок: {{ author.follower.count }} </h4>
     <h4> Всего подсписчиков: {{ author.following.count }} </h4>
 	  <br>
-    {% if request.user.is_authenticated  %}
-			{% if author.username != request.user.username %}
-	      {% if following %}
-		      <a
-		        class="btn btn-lg btn-outline-secondary"
-		        href="{% url 'posts:profile_unfollow' author.username %}" role="button"
-		      >
-		        Отписаться
-		      </a>
-	      {% else %}
-		      <a
-		        class="btn btn-lg btn-outline-primary"
-		        href="{% url 'posts:profile_follow' author.username %}" role="button"
-		      >
-		        Подписаться
-		      </a>
-	      {% endif %}
-	      <br><br>
-			{% endif %}
-    {% endif %}
+    {% if request.user.is_authenticated and author.username != request.user.username %}
+      {% if following %}
+	      <a
+	        class="btn btn-lg btn-outline-secondary"
+	        href="{% url 'posts:profile_unfollow' author.username %}" role="button"
+	      >
+	        Отписаться
+	      </a>
+      {% else %}
+	      <a
+	        class="btn btn-lg btn-outline-primary"
+	        href="{% url 'posts:profile_follow' author.username %}" role="button"
+	      >
+	        Подписаться
+	      </a>
+      {% endif %}
+      <br><br>
+		{% endif %}
+
     {% for item in page_obj %}
       {% include 'includes/show_post.html' %}
     {% endfor %}

@@ -74,19 +74,18 @@ class CommentViewTest(TestCase):
 
     def test_created_comment_shows_on_page(self):
         """ Проверка отображения комментария на странице нужного поста """
-        post_id = CommentViewTest.post.pk
-        form_data = {'text': 'new comment 3'}
-        self.authorized_client.post(
-            reverse(
-                'posts:add_comment',
-                kwargs={'post_id': post_id}
-            ),
-            data=form_data
+        post = CommentViewTest.post
+        author = CommentViewTest.user
+
+        Comment.objects.create(
+            text='new comment 3',
+            post=post,
+            author=author
         )
         response = self.authorized_client.get(
             reverse(
                 'posts:posts',
-                kwargs={'post_id': post_id}
+                kwargs={'post_id': post.pk}
             )
         )
         self.assertEqual(
