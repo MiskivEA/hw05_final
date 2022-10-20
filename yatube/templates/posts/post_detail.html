@@ -37,6 +37,11 @@
               Редактировать
             </a>
           </li>
+          <li class="list-group-item">
+            <a href="{% url 'posts:post_delete' post.pk  %}">
+              Удалить
+            </a>
+          </li>
           {% endif %}
         </ul>
       </aside>

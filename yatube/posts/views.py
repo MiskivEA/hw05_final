@@ -16,7 +16,7 @@ def get_page_objects(request, page_objects, display_post):
     return page_obj
 
 
-@cache_page(20)
+@cache_page(3)
 def index(request):
     posts = Post.objects.all()
     page_obj = get_page_objects(request, posts, DISPLAY_POST)
@@ -100,6 +100,15 @@ def post_edit(request, post_id):
         'post_id': post_id
     }
     return render(request, template, context)
+
+
+@login_required
+def post_delete(request, post_id):
+    post = Post.objects.get(pk=post_id)
+    if post.author.username == request.user.username:
+        post.delete()
+        return redirect('posts:index')
+    return redirect('posts:posts', post_id)
 
 
 @login_required
