@@ -104,7 +104,7 @@ def post_edit(request, post_id):
 
 @login_required
 def post_delete(request, post_id):
-    post = Post.objects.get(pk=post_id)
+    post = get_object_or_404(Post, pk=post_id)
     if post.author.username == request.user.username:
         post.delete()
         return redirect('posts:index')
